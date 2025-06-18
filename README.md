@@ -146,3 +146,45 @@ I hope you like this tool and it will make your environment safer as well!
 If you have any follow-up questions, please reach out to me!
 
 — Koos
+
+```
+
+## Manual / incremental deployments
+
+...
+
+### GenerateADXTransformations.ps1
+
+A utility to generate Kusto scripts and table ingestion mappings for Microsoft 365 Defender data landing in ADX.
+
+**Usage:**
+```powershell
+# Basic usage (outputs script to screen)
+.\GenerateADXTransformations.ps1 -tenantId "<tenant>" -appId "<appId>" -appSecret "<appSecret>" -showScript
+
+# Save to file for review
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -outputFile out.kusto
+
+# For specific tables only:
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -tables "EmailEvents,DeviceFileEvents" -showScript
+
+# To push directly to ADX (requires Az.Kusto):
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -execute -clusterUri "https://<cluster>.<region>.kusto.windows.net" -database "<databasename>"
+
+# All parameters:
+#   -tenantId      (required)
+#   -appId         (required)
+#   -appSecret     (required)
+#   -tables        (optional, comma-separated list; defaults to all supported tables)
+#   -outputFile    (optional)
+#   -showScript    (switch)
+#   -execute       (switch; requires -clusterUri and -database)
+#   -clusterUri    (required with -execute)
+#   -database      (required with -execute)
+```
+
+This script will query the Defender API for each requested table, generate all necessary Kusto table/mapping/function/update policy commands, and output/execute as desired. When using `-execute`, the Az.Kusto module is installed if missing, and all commands are applied to the chosen cluster/database.
+
+If you have any follow-up questions, please reach out to me!
+
+— Koos
