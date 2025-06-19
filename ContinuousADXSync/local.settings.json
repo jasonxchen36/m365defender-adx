@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "powershell",
+    "TENANT_ID": "00000000-0000-0000-0000-000000000000",
+    "APP_ID": "your-app-id",
+    "APP_SECRET": "your-app-secret",
+    "CLUSTER_URI": "https://yourcluster.kusto.windows.net",
+    "DATABASE": "your-database",
+    "TABLES": "DeviceEvents,AlertInfo", // (optional) comma list, leave blank for all supported
+    "RAW_RETENTION_DAYS": "1",
+    "TABLE_RETENTION_DAYS": "365"
+  }
+}
+// NOTE: Exclude this file from git and replace example values in production.

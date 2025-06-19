@@ -143,6 +143,99 @@ I still wouldn’t call myself an expert on PowerShell. So if you have feedback 
 
 I hope you like this tool and it will make your environment safer as well!
 
+## Continuous sync Azure Function
+
+The `ContinuousADXSync` Azure Function (PowerShell) ensures Microsoft 365 Defender table transformations exist and are kept up-to-date in Azure Data Explorer (ADX). It runs on a schedule (default: every 12 hours) and will:
+
+- For each Defender table (or a custom list via `TABLES`), fetch the latest schema via Microsoft Graph.
+- Check if the formatted ADX table exists and matches the Defender schema.
+- If the table is missing or the schema has changed, it will (re)generate tables, update policies, and apply all necessary Kusto objects.
+- Skips tables that are already current.
+- Logs progress and warnings, continues through errors.
+
+### Deployment
+
+1. Copy or deploy the `ContinuousADXSync` folder as an Azure Function App (PowerShell).
+2. Set the following environment variables (via Azure Function configuration or local.settings.json):
+
+    - `TENANT_ID` – Azure AD tenant ID
+    - `APP_ID` – App registration (client) ID with ThreatHunting.Read.All
+    - `APP_SECRET` – App registration secret
+    - `CLUSTER_URI` – ADX cluster URI
+    - `DATABASE` – ADX database name
+    - `TABLES` – (Optional) Comma-separated list of Defender tables (defaults to all supported)
+    - `RAW_RETENTION_DAYS` – (Optional) Raw table retention in days (default: 1)
+    - `TABLE_RETENTION_DAYS` – (Optional) Formatted table retention in days (default: 365)
+
+3. The function will run automatically on its schedule, or can be triggered on demand.
+
+### Example local.settings.json
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "powershell",
+    "TENANT_ID": "00000000-0000-0000-0000-000000000000",
+    "APP_ID": "your-app-id",
+    "APP_SECRET": "your-app-secret",
+    "CLUSTER_URI": "https://yourcluster.kusto.windows.net",
+    "DATABASE": "your-database"
+  }
+}
+```
+
+> **Note:** Do not commit secrets or local.settings.json to git.
+
+### Requirements
+
+- PowerShell Azure Functions
+- Modules: `Az.Accounts`, `Az.Kusto`
+- App registration with ThreatHunting.Read.All permission
+
+If you have any follow-up questions, please reach out to me!
+
+— Koos
+
+```
+
+## Manual / incremental deployments
+
+...
+
+### GenerateADXTransformations.ps1
+
+A utility to generate Kusto scripts and table ingestion mappings for Microsoft 365 Defender data landing in ADX.
+
+**Usage:**
+```powershell
+# Basic usage (outputs script to screen)
+.\GenerateADXTransformations.ps1 -tenantId "<tenant>" -appId "<appId>" -appSecret "<appSecret>" -showScript
+
+# Save to file for review
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -outputFile out.kusto
+
+# For specific tables only:
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -tables "EmailEvents,DeviceFileEvents" -showScript
+
+# To push directly to ADX (requires Az.Kusto):
+.\GenerateADXTransformations.ps1 -tenantId ... -appId ... -appSecret ... -execute -clusterUri "https://<cluster>.<region>.kusto.windows.net" -database "<databasename>"
+
+# All parameters:
+#   -tenantId      (required)
+#   -appId         (required)
+#   -appSecret     (required)
+#   -tables        (optional, comma-separated list; defaults to all supported tables)
+#   -outputFile    (optional)
+#   -showScript    (switch)
+#   -execute       (switch; requires -clusterUri and -database)
+#   -clusterUri    (required with -execute)
+#   -database      (required with -execute)
+```
+
+This script will query the Defender API for each requested table, generate all necessary Kusto table/mapping/function/update policy commands, and output/execute as desired. When using `-execute`, the Az.Kusto module is installed if missing, and all commands are applied to the chosen cluster/database.
+
 If you have any follow-up questions, please reach out to me!
 
 — Koos
